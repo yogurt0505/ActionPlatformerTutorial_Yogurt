@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
 {
     public float walkSpeed = 5f;
     public float runSpeed = 8f;
+    public float airWalkSpeed = 3f;
     public float jumpImpulse = 10f;
     Vector2 moveInput;
     TouchingDirection touchingDirection;
@@ -18,21 +19,36 @@ public class PlayerController : MonoBehaviour
     {
         get
         {
-            if (IsMoving) //moving = true
+            if (CanMove)
             {
-                if (IsRunning) //running = true
+                if (IsMoving && !touchingDirection.IsOnWall)
                 {
-                    return runSpeed;
+                    if (touchingDirection.IsGrounded)
+                    {
+                        if (IsRunning) //running = true
+                        {
+                            return runSpeed;
+                        }
+                        else //running = false
+                        {
+                            return walkSpeed;
+                        }
+                    }
+                    else //airwalk = true
+                    {
+                        return airWalkSpeed;
+                    }
                 }
-                else //running = false
+                else //idle = true
                 {
-                    return walkSpeed;
+                    return 0;
                 }
             }
-            else //idle = true
+            else
             {
                 return 0;
             }
+
         }
     }
 
@@ -83,6 +99,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public bool CanMove { 
+        get
+        {
+            return animator.GetBool(AnimationStrings.canMove);
+        }
+    }
     Rigidbody2D rb;
     Animator animator;
 
@@ -138,10 +160,20 @@ public class PlayerController : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.started && touchingDirection.IsGrounded)
+        if (context.started && touchingDirection.IsGrounded && CanMove)
         {
-            animator.SetTrigger(AnimationStrings.jump);
+            animator.SetTrigger(AnimationStrings.jumpTrigger);
             rb.velocity = new Vector2(rb.velocity.x, jumpImpulse);
         }
     }
+
+    public void OnAttack(InputAction.CallbackContext context)
+    {
+        if(context.started)
+        {
+            animator.SetTrigger(AnimationStrings.attackTrigger);
+        }
+    }
+    
+
 }
